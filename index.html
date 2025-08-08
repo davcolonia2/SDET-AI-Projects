@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>David Colonia | SDET</title>
+  <meta name="description" content="Portfolio of David Colonia — Software Development Engineer in Test (SDET)." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <noscript>JavaScript is disabled. The site will still render, but menu/theme toggles and accessibility helpers require JS.</noscript>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header>
+    <nav class="navbar" aria-label="Primary">
+      <div class="nav-brand">David Colonia</div>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="primary-navigation" aria-label="Open Menu">Menu</button>
+      <ul id="primary-navigation" class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button id="theme-toggle" aria-pressed="false" aria-label="Toggle dark/light theme">Toggle Theme</button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="home" aria-label="Homepage intro">
+      <img src="profile.jpg" alt="Profile picture placeholder" class="profile-pic" />
+      <h1>David Colonia</h1>
+      <h2>Software Development Engineer in Test (SDET)</h2>
+      <p>Seasoned QA professional with 7+ years testing mobile (Android/iOS) and web apps. Focus on scalable automation, API testing, and CI/CD reliability.</p>
+      <nav class="hero-cta" aria-label="Section navigation">
+        <a class="btn" href="#projects">View Projects</a>
+        <a class="btn outline" href="#contact">Contact Me</a>
+      </nav>
+    </section>
+
+    <section id="about" aria-label="About David">
+      <h2>About</h2>
+      <p>I’m an SDET based in San Jose, CA, focused on building reliable test automation for web and mobile. (Placeholder copy—swap in anything you like.)</p>
+    </section>
+
+    <section id="projects" aria-label="Projects">
+      <h2>Projects</h2>
+      <div class="projects-container">
+        <article class="project-card">
+          <img src="placeholder1.png" alt="Screenshot placeholder for Test Automation Framework" />
+          <div class="project-content">
+            <h3>Test Automation Framework</h3>
+            <p>Scalable Selenium + Java framework with Page Object Model, Allure reports, and CI via Jenkins.</p>
+            <p class="project-links">
+              <a href="#" target="_blank" rel="noopener">Live Demo</a> ·
+              <a href="#" target="_blank" rel="noopener">GitHub</a>
+            </p>
+          </div>
+        </article>
+        <article class="project-card">
+          <img src="placeholder2.png" alt="Screenshot placeholder for API Test Suite" />
+          <div class="project-content">
+            <h3>API Test Suite</h3>
+            <p>REST API tests using Rest-Assured and Requests with environment configs and reports.</p>
+            <p class="project-links">
+              <a href="#" target="_blank" rel="noopener">Live Demo</a> ·
+              <a href="#" target="_blank" rel="noopener">GitHub</a>
+            </p>
+          </div>
+        </article>
+        <article class="project-card">
+          <img src="placeholder3.png" alt="Screenshot placeholder for Cross-Browser Testing" />
+          <div class="project-content">
+            <h3>Cross-Browser Testing</h3>
+            <p>Automated compatibility matrix using BrowserStack and Cypress, with CI status checks.</p>
+            <p class="project-links">
+              <a href="#" target="_blank" rel="noopener">Live Demo</a> ·
+              <a href="#" target="_blank" rel="noopener">GitHub</a>
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="contact" aria-label="Contact">
+      <h2>Contact</h2>
+      <ul class="contact-list">
+        <li>Email: <a href="mailto:davidcolonia95119@gmail.com">davidcolonia95119@gmail.com</a></li>
+        <li>LinkedIn: <a href="https://www.linkedin.com/in/davidcolonia" target="_blank" rel="noopener">linkedin.com/in/davidcolonia</a></li>
+        <li>Phone: <a href="tel:+14086376626">(408) 637-6626</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; <span id="year"></span> David Colonia</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
