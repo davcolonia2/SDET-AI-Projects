@@ -1,99 +1,288 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>David Colonia | SDET</title>
-  <meta name="description" content="Portfolio of David Colonia — Software Development Engineer in Test (SDET)." />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>David Colonia - Software QA Engineer</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <noscript>JavaScript is disabled. The site will still render, but menu/theme toggles and accessibility helpers require JS.</noscript>
-  <a class="skip-link" href="#main">Skip to content</a>
-
-  <header>
-    <nav class="navbar" aria-label="Primary">
-      <div class="nav-brand">David Colonia</div>
-      <button class="menu-toggle" aria-expanded="false" aria-controls="primary-navigation" aria-label="Open Menu">Menu</button>
-      <ul id="primary-navigation" class="nav-links">
-        <li><a href="#about">About</a></li>
-        <li><a href="#projects">Projects</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-      <button id="theme-toggle" aria-pressed="false" aria-label="Toggle dark/light theme">Toggle Theme</button>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="#home">David Colonia</a>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#projects" class="nav-link">Projects</a>
+                <a href="#contact" class="nav-link">Contact</a>
+                <button class="theme-toggle" id="theme-toggle">🌙</button>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
     </nav>
-  </header>
 
-  <main id="main">
-    <section class="hero" id="home" aria-label="Homepage intro">
-      <img src="profile.jpg" alt="Profile picture placeholder" class="profile-pic" />
-      <h1>David Colonia</h1>
-      <h2>Software Development Engineer in Test (SDET)</h2>
-      <p>Seasoned QA professional with 7+ years testing mobile (Android/iOS) and web apps. Focus on scalable automation, API testing, and CI/CD reliability.</p>
-      <nav class="hero-cta" aria-label="Section navigation">
-        <a class="btn" href="#projects">View Projects</a>
-        <a class="btn outline" href="#contact">Contact Me</a>
-      </nav>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="profile-img-container">
+                    <div class="profile-img-placeholder">
+                        <span>DC</span>
+                    </div>
+                </div>
+                <h1 class="hero-title">David Colonia</h1>
+                <p class="hero-subtitle">Senior Software QA Engineer</p>
+                <p class="hero-description">
+                    Seasoned SDET with 7+ years of experience in testing mobile and web applications, 
+                    specializing in automation frameworks and delivering high-quality software solutions.
+                </p>
+                <div class="hero-cta">
+                    <a href="#contact" class="btn btn-primary">Get In Touch</a>
+                    <a href="#projects" class="btn btn-secondary">View Projects</a>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <section id="about" aria-label="About David">
-      <h2>About</h2>
-      <p>I’m an SDET based in San Jose, CA, focused on building reliable test automation for web and mobile. (Placeholder copy—swap in anything you like.)</p>
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>
+                        I'm a passionate Software Development Engineer in Test (SDET) with over 7 years of experience 
+                        in the quality assurance field. My expertise spans across testing mobile applications (Android, iOS) 
+                        and web applications, with a strong foundation in automation testing.
+                    </p>
+                    <p>
+                        Throughout my career, I've conducted 200+ functional, UI, smoke, and regression tests, ensuring 
+                        high-quality product releases. I specialize in developing and executing test automation scripts 
+                        using Selenium WebDriver with Java/Python, and I'm known for my exceptional organizational 
+                        skills and attention to detail.
+                    </p>
+                    <p>
+                        I hold a Bachelor of Arts from UC Berkeley and completed the Berkeley Extension coding bootcamp 
+                        focusing on Data Analytics using Python and API integration. I'm always eager to learn new 
+                        technologies and contribute to creating robust, reliable software solutions.
+                    </p>
+                </div>
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h3>Testing Types</h3>
+                        <ul>
+                            <li>Unit Testing</li>
+                            <li>Integration Testing</li>
+                            <li>Regression Testing</li>
+                            <li>Performance Testing</li>
+                            <li>UI Testing</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h3>Tools & Platforms</h3>
+                        <ul>
+                            <li>Selenium WebDriver</li>
+                            <li>Chrome DevTools</li>
+                            <li>Jira & TestRail</li>
+                            <li>Postman & REST API</li>
+                            <li>Jenkins & GitHub</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h3>Programming</h3>
+                        <ul>
+                            <li>Java & Python</li>
+                            <li>JavaScript & TypeScript</li>
+                            <li>HTML5 & CSS3</li>
+                            <li>SQL & MySQL</li>
+                            <li>C# & C++</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <section id="projects" aria-label="Projects">
-      <h2>Projects</h2>
-      <div class="projects-container">
-        <article class="project-card">
-          <img src="placeholder1.png" alt="Screenshot placeholder for Test Automation Framework" />
-          <div class="project-content">
-            <h3>Test Automation Framework</h3>
-            <p>Scalable Selenium + Java framework with Page Object Model, Allure reports, and CI via Jenkins.</p>
-            <p class="project-links">
-              <a href="#" target="_blank" rel="noopener">Live Demo</a> ·
-              <a href="#" target="_blank" rel="noopener">GitHub</a>
-            </p>
-          </div>
-        </article>
-        <article class="project-card">
-          <img src="placeholder2.png" alt="Screenshot placeholder for API Test Suite" />
-          <div class="project-content">
-            <h3>API Test Suite</h3>
-            <p>REST API tests using Rest-Assured and Requests with environment configs and reports.</p>
-            <p class="project-links">
-              <a href="#" target="_blank" rel="noopener">Live Demo</a> ·
-              <a href="#" target="_blank" rel="noopener">GitHub</a>
-            </p>
-          </div>
-        </article>
-        <article class="project-card">
-          <img src="placeholder3.png" alt="Screenshot placeholder for Cross-Browser Testing" />
-          <div class="project-content">
-            <h3>Cross-Browser Testing</h3>
-            <p>Automated compatibility matrix using BrowserStack and Cypress, with CI status checks.</p>
-            <p class="project-links">
-              <a href="#" target="_blank" rel="noopener">Live Demo</a> ·
-              <a href="#" target="_blank" rel="noopener">GitHub</a>
-            </p>
-          </div>
-        </article>
-      </div>
+    <!-- Projects Section -->
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-image">
+                        <div class="project-placeholder">🧪</div>
+                    </div>
+                    <div class="project-content">
+                        <h3>Test Automation Framework</h3>
+                        <p>
+                            Comprehensive test automation framework built with Selenium WebDriver and Java. 
+                            Features page object model, data-driven testing, and CI/CD integration with Jenkins.
+                        </p>
+                        <div class="project-tech">
+                            <span>Java</span>
+                            <span>Selenium</span>
+                            <span>TestNG</span>
+                            <span>Maven</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">GitHub</a>
+                            <a href="#" class="project-link">Demo</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <div class="project-placeholder">📱</div>
+                    </div>
+                    <div class="project-content">
+                        <h3>Mobile Testing Suite</h3>
+                        <p>
+                            Cross-platform mobile testing solution for Android and iOS applications using Appium. 
+                            Includes device farms integration and parallel test execution capabilities.
+                        </p>
+                        <div class="project-tech">
+                            <span>Python</span>
+                            <span>Appium</span>
+                            <span>Pytest</span>
+                            <span>BrowserStack</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">GitHub</a>
+                            <a href="#" class="project-link">Demo</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <div class="project-placeholder">🔧</div>
+                    </div>
+                    <div class="project-content">
+                        <h3>API Testing Toolkit</h3>
+                        <p>
+                            REST API testing framework with automated request/response validation, 
+                            performance testing capabilities, and comprehensive reporting dashboard.
+                        </p>
+                        <div class="project-tech">
+                            <span>Python</span>
+                            <span>Requests</span>
+                            <span>Postman</span>
+                            <span>JMeter</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">GitHub</a>
+                            <a href="#" class="project-link">Demo</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <div class="project-placeholder">📊</div>
+                    </div>
+                    <div class="project-content">
+                        <h3>Test Data Analytics</h3>
+                        <p>
+                            Data analytics project analyzing test execution trends and defect patterns. 
+                            Built with Python and visualization libraries to improve testing efficiency.
+                        </p>
+                        <div class="project-tech">
+                            <span>Python</span>
+                            <span>Pandas</span>
+                            <span>Matplotlib</span>
+                            <span>SQL</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">GitHub</a>
+                            <a href="#" class="project-link">Demo</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <div class="project-placeholder">⚙️</div>
+                    </div>
+                    <div class="project-content">
+                        <h3>CI/CD Pipeline Integration</h3>
+                        <p>
+                            Jenkins-based CI/CD pipeline for automated test execution with Allure reporting, 
+                            Slack notifications, and integration with multiple testing environments.
+                        </p>
+                        <div class="project-tech">
+                            <span>Jenkins</span>
+                            <span>Docker</span>
+                            <span>Allure</span>
+                            <span>Bash</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">GitHub</a>
+                            <a href="#" class="project-link">Demo</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <section id="contact" aria-label="Contact">
-      <h2>Contact</h2>
-      <ul class="contact-list">
-        <li>Email: <a href="mailto:davidcolonia95119@gmail.com">davidcolonia95119@gmail.com</a></li>
-        <li>LinkedIn: <a href="https://www.linkedin.com/in/davidcolonia" target="_blank" rel="noopener">linkedin.com/in/davidcolonia</a></li>
-        <li>Phone: <a href="tel:+14086376626">(408) 637-6626</a></li>
-      </ul>
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-content">
+                <p class="contact-description">
+                    I'm always interested in discussing new opportunities, challenging projects, 
+                    or simply connecting with fellow professionals in the QA and testing community.
+                </p>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">📧</div>
+                        <div class="contact-details">
+                            <h3>Email</h3>
+                            <a href="mailto:davidcolonia95119@gmail.com">davidcolonia95119@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">💼</div>
+                        <div class="contact-details">
+                            <h3>LinkedIn</h3>
+                            <a href="https://linkedin.com/in/davidcolonia" target="_blank">linkedin.com/in/davidcolonia</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📱</div>
+                        <div class="contact-details">
+                            <h3>Phone</h3>
+                            <a href="tel:4086376626">(408) 637-6626</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div class="contact-details">
+                            <h3>Location</h3>
+                            <span>San Jose, CA 95119</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
-  </main>
 
-  <footer>
-    <p>&copy; <span id="year"></span> David Colonia</p>
-  </footer>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 David Colonia. All rights reserved.</p>
+        </div>
+    </footer>
 
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
