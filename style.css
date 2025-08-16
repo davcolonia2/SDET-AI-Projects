@@ -530,13 +530,21 @@ html {
     color: var(--text-secondary);
 }
 
-/* Music Player Styles */
+/* Music Player Styles - Footer Version */
 .music-player {
-    position: fixed;
-    top: 10px;
-    left: 20px;
+    position: relative;
+    display: inline-block;
+    margin-right: 2rem;
     z-index: 1001;
     transition: var(--transition);
+}
+
+.footer .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -586,7 +594,7 @@ html {
 
 .music-info {
     position: absolute;
-    top: 60px;
+    bottom: 60px;
     left: 0;
     background: var(--surface-color);
     border: 1px solid var(--border-color);
@@ -596,7 +604,7 @@ html {
     box-shadow: var(--shadow-lg);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-10px);
+    transform: translateY(10px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(10px);
 }
@@ -758,9 +766,15 @@ html {
 
 /* Music player responsive design */
 @media (max-width: 768px) {
+    .footer .container {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
     .music-player {
-        top: 15px;
-        left: 15px;
+        margin-right: 0;
+        margin-bottom: 1rem;
     }
     
     .music-toggle {
@@ -771,14 +785,18 @@ html {
     
     .music-info {
         min-width: 260px;
-        left: -10px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+    }
+    
+    .music-player:hover .music-info {
+        transform: translateX(-50%) translateY(0);
     }
 }
 
 @media (max-width: 480px) {
     .music-info {
         min-width: 240px;
-        left: -20px;
     }
 }
 .scroll-to-top {
