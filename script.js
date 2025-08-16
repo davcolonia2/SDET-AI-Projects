@@ -28,7 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Theme toggle event listener
     if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
+        themeToggle.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent any default button behavior
+            e.stopPropagation(); // Stop event bubbling
+            
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             
@@ -37,25 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeToggleIcon(newTheme);
-            
-            // Update music player theme
-            updateMusicPlayerTheme(newTheme);
         });
     } else {
         console.error('Theme toggle button not found!'); // Debug line
     }
-
-    // Update music player theme colors
-    const updateMusicPlayerTheme = (theme) => {
-        const musicToggleBtn = document.getElementById('music-toggle');
-        if (musicToggleBtn) {
-            if (theme === 'dark') {
-                musicToggleBtn.style.background = 'rgba(59, 130, 246, 0.9)';
-            } else {
-                musicToggleBtn.style.background = 'rgba(37, 99, 235, 0.9)';
-            }
-        }
-    };
 
     // Mobile menu toggle functionality
     if (hamburger && navMenu) {
