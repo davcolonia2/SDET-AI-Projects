@@ -34,7 +34,7 @@
             <div class="hero-content">
                 <div class="profile-img-container">
                     <div class="profile-img-placeholder">
-                        <img src = "pirate-profile.jpg" />
+                        <img src="pirate-profile.jpg" alt="David Colonia - Software QA Engineer" />
                         <span>DC</span>
                     </div>
                 </div>
@@ -288,11 +288,21 @@
                 </button>
                 <div class="music-info" id="music-info">
                     <div class="song-details">
-                        <div class="song-title">Lofi Hip Hop</div>
-                        <div class="song-artist">Chill Beats</div>
+                        <div class="search-container">
+                            <input type="text" class="music-search" id="music-search" placeholder="Search YouTube music...">
+                            <button class="search-btn" id="search-btn">🔍</button>
+                        </div>
+                        <div class="current-track">
+                            <div class="song-title" id="current-title">Search for music</div>
+                            <div class="song-artist" id="current-artist">Click search to get started</div>
+                        </div>
+                        <div class="search-results" id="search-results" style="display: none;">
+                            <!-- Search results will be populated here -->
+                        </div>
                         <div class="music-controls">
                             <button class="control-btn" id="prev-btn">⏮️</button>
                             <button class="control-btn" id="next-btn">⏭️</button>
+                            <button class="control-btn" id="shuffle-btn">🔀</button>
                             <div class="volume-control">
                                 <span class="volume-icon">🔊</span>
                                 <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="50">
@@ -306,14 +316,23 @@
                                 <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
                             </div>
                         </div>
+                        <div class="api-notice">
+                            <small>🔑 YouTube API Setup Required</small>
+                            <div class="api-setup-steps">
+                                <strong>Quick Setup:</strong><br>
+                                1. Get free API key from Google Cloud Console<br>
+                                2. Enable YouTube Data API v3<br>
+                                3. Add key to script.js (line 2)<br>
+                            </div>
+                            <button class="api-test-btn" onclick="testApiKey()">Test API Key</button>
+                        </div>
                     </div>
                 </div>
-                <audio id="audio-player" loop>
-                    <source src="music/lofi-hip-hop.mp3" type="audio/mpeg">
-                    <!-- Fallback for browsers that don't support MP3 -->
-                    <source src="music/lofi-hip-hop.ogg" type="audio/ogg">
-                    Your browser does not support the audio element.
-                </audio>
+                
+                <!-- Hidden YouTube Player -->
+                <div id="youtube-player-container" style="display: none;">
+                    <div id="youtube-player"></div>
+                </div>
             </div>
             
             <p>&copy; 2025 David Colonia. All rights reserved.</p>

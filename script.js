@@ -246,176 +246,335 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('💼 David Colonia - Software QA Engineer');
 });
 
-// Music Player Functionality (moved outside DOMContentLoaded since it has its own initialization)
-const musicToggle = document.getElementById('music-toggle');
-const audioPlayer = document.getElementById('audio-player');
-const playIcon = document.querySelector('.play-icon');
-const pauseIcon = document.querySelector('.pause-icon');
-const progressFill = document.getElementById('progress-fill');
-const currentTimeDisplay = document.getElementById('current-time');
-const totalTimeDisplay = document.getElementById('total-time');
-const volumeSlider = document.getElementById('volume-slider');
-const progressBar = document.querySelector('.progress-bar');
-const prevBtn = document.getElementById('prev-btn');
-const nextBtn = document.getElementById('next-btn');
-
-// Sample playlist - you can expand this
-const playlist = [
-    {
-        title: 'Lofi Hip Hop',
-        artist: 'Chill Beats',
-        src: 'music/lofi-hip-hop.mp3'
-    },
-    {
-        title: 'Ambient Space',
-        artist: 'Cosmic Sounds',
-        src: 'music/ambient-space.mp3'
-    },
-    {
-        title: 'Study Session',
-        artist: 'Focus Music',
-        src: 'music/study-session.mp3'
-    }
-];
-
+// YouTube Music Player Functionality
+// 🔑 STEP 1: Replace 'YOUR_API_KEY_HERE' with your actual YouTube API key
+const YOUTUBE_API_KEY = 'AIzaSyDCD-Pi2hOjBnO8nCMVHaVOhBT6ypBwksc'; // ← PUT YOUR ACTUAL API KEY HERE
+let youtubePlayer;
+let currentPlaylist = [];
 let currentTrackIndex = 0;
 let isPlaying = false;
 
-// Initialize music player
-const initMusicPlayer = () => {
-    // Set initial volume
-    audioPlayer.volume = volumeSlider.value / 100;
+// Initialize YouTube Player
+const initYouTubePlayer = () => {
+    // Load YouTube IFrame API
+    if (!window.YT) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
     
-    // Load first track
-    loadTrack(currentTrackIndex);
-    
-    // Update total time when metadata loads
-    audioPlayer.addEventListener('loadedmetadata', () => {
-        totalTimeDisplay.textContent = formatTime(audioPlayer.duration);
-    });
-    
-    // Update progress bar and current time
-    audioPlayer.addEventListener('timeupdate', () => {
-        if (audioPlayer.duration) {
-            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-            progressFill.style.width = progress + '%';
-            currentTimeDisplay.textContent = formatTime(audioPlayer.currentTime);
-        }
-    });
-    
-    // Handle track end
-    audioPlayer.addEventListener('ended', () => {
-        nextTrack();
-    });
+    // YouTube API ready callback
+    window.onYouTubeIframeAPIReady = () => {
+        youtubePlayer = new YT.Player('youtube-player', {
+            height: '0',
+            width: '0',
+            playerVars: {
+                autoplay: 0,
+                controls: 0,
+                disablekb: 1,
+                enablejsapi: 1,
+                fs: 0,
+                iv_load_policy: 3,
+                modestbranding: 1,
+                playsinline: 1,
+                rel: 0
+            },
+            events: {
+                onReady: onPlayerReady,
+                onStateChange: onPlayerStateChange
+            }
+        });
+    };
 };
 
-// Load track
-const loadTrack = (index) => {
-    if (playlist[index]) {
-        const track = playlist[index];
-        audioPlayer.src = track.src;
-        document.querySelector('.song-title').textContent = track.title;
-        document.querySelector('.song-artist').textContent = track.artist;
-    }
+const onPlayerReady = (event) => {
+    console.log('YouTube player ready');
+    updateVolumeFromSlider();
 };
 
-// Play/pause functionality
-musicToggle.addEventListener('click', () => {
-    if (isPlaying) {
-        pauseMusic();
-    } else {
-        playMusic();
-    }
-});
-
-const playMusic = () => {
-    audioPlayer.play().then(() => {
+const onPlayerStateChange = (event) => {
+    if (event.data === YT.PlayerState.PLAYING) {
         isPlaying = true;
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
-        musicToggle.style.animation = 'pulse 2s infinite';
-    }).catch(error => {
-        console.log('Audio play failed:', error);
-        // Fallback for autoplay restrictions
-        showPlayMessage();
+        updatePlayPauseButton();
+        startProgressUpdate();
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        isPlaying = false;
+        updatePlayPauseButton();
+    } else if (event.data === YT.PlayerState.ENDED) {
+        nextTrack();
+    }
+};
+
+// Search YouTube videos
+const searchYouTube = async (query) => {
+    console.log('API Key check:', YOUTUBE_API_KEY ? 'Present' : 'Missing');
+    
+    if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'YOUR_API_KEY_HERE') {
+        showApiKeyNotice();
+        return;
+    }
+    
+    const searchResults = document.getElementById('search-results');
+    searchResults.style.display = 'block';
+    searchResults.innerHTML = '<div class="loading">🔍 Searching...</div>';
+    
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&maxResults=5&q=${encodeURIComponent(query + ' music')}&key=${YOUTUBE_API_KEY}`;
+    console.log('API URL:', url.replace(YOUTUBE_API_KEY, 'API_KEY_HIDDEN'));
+    
+    try {
+        const response = await fetch(url);
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error Response:', errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('API Response:', data);
+        displaySearchResults(data.items);
+    } catch (error) {
+        console.error('YouTube search error:', error);
+        searchResults.innerHTML = `
+            <div class="no-results">
+                <p>❌ API Error</p>
+                <small>${error.message}</small>
+                <br><small>Check console for details</small>
+            </div>
+        `;
+    }
+};
+
+const displaySearchResults = (results) => {
+    const searchResults = document.getElementById('search-results');
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="no-results">No results found</div>';
+        return;
+    }
+    
+    searchResults.innerHTML = results.map(item => `
+        <div class="search-result-item" data-video-id="${item.id.videoId}">
+            <img class="result-thumbnail" src="${item.snippet.thumbnails.default.url}" alt="thumbnail">
+            <div class="result-info">
+                <div class="result-title">${item.snippet.title}</div>
+                <div class="result-channel">${item.snippet.channelTitle}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add click listeners to results
+    searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const videoId = item.dataset.videoId;
+            const title = item.querySelector('.result-title').textContent;
+            const channel = item.querySelector('.result-channel').textContent;
+            playTrack(videoId, title, channel);
+            searchResults.style.display = 'none';
+        });
     });
 };
 
-const pauseMusic = () => {
-    audioPlayer.pause();
-    isPlaying = false;
-    playIcon.style.display = 'block';
-    pauseIcon.style.display = 'none';
-    musicToggle.style.animation = 'none';
+const playTrack = (videoId, title, channel) => {
+    if (!youtubePlayer || !youtubePlayer.loadVideoById) {
+        console.error('YouTube player not ready');
+        return;
+    }
+    
+    youtubePlayer.loadVideoById(videoId);
+    updateCurrentTrackInfo(title, channel);
+    
+    // Add to playlist if not already there
+    const trackExists = currentPlaylist.find(track => track.videoId === videoId);
+    if (!trackExists) {
+        currentPlaylist.push({ videoId, title, channel });
+        currentTrackIndex = currentPlaylist.length - 1;
+    }
 };
 
-// Show message for autoplay restrictions
-const showPlayMessage = () => {
-    const message = document.createElement('div');
-    message.textContent = 'Click to play music';
-    message.style.cssText = `
-        position: fixed;
-        top: 80px;
-        left: 20px;
-        background: var(--primary-color);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 0.8rem;
-        z-index: 1002;
-        opacity: 0;
-        animation: fadeInOut 3s ease-in-out;
+const updateCurrentTrackInfo = (title, channel) => {
+    document.getElementById('current-title').textContent = title;
+    document.getElementById('current-artist').textContent = channel;
+};
+
+const showApiKeyNotice = () => {
+    const searchResults = document.getElementById('search-results');
+    searchResults.style.display = 'block';
+    searchResults.innerHTML = `
+        <div class="no-results">
+            <p>⚠️ YouTube API Setup Required</p>
+            <small>1. Get API key from Google Cloud Console</small><br>
+            <small>2. Enable YouTube Data API v3</small><br>
+            <small>3. Replace API key in script.js</small><br><br>
+            <button onclick="testApiKey()" style="padding: 4px 8px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">Test API Key</button>
+        </div>
     `;
-    document.body.appendChild(message);
-    setTimeout(() => message.remove(), 3000);
 };
 
-// Volume control
-volumeSlider.addEventListener('input', (e) => {
-    audioPlayer.volume = e.target.value / 100;
+// Test function to check API key
+window.testApiKey = async () => {
+    console.log('Testing API key...');
+    const testUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=test&key=${YOUTUBE_API_KEY}`;
+    
+    try {
+        const response = await fetch(testUrl);
+        const data = await response.json();
+        
+        if (response.ok) {
+            console.log('✅ API key works!', data);
+            alert('✅ API key is working! Try searching for music now.');
+        } else {
+            console.error('❌ API key error:', data);
+            alert(`❌ API Error: ${data.error?.message || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('❌ Network error:', error);
+        alert(`❌ Network Error: ${error.message}`);
+    }
+};
+
+// Music Player Controls
+const musicToggle = document.getElementById('music-toggle');
+const playIcon = document.querySelector('.play-icon');
+const pauseIcon = document.querySelector('.pause-icon');
+const searchInput = document.getElementById('music-search');
+const searchBtn = document.getElementById('search-btn');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const shuffleBtn = document.getElementById('shuffle-btn');
+const volumeSlider = document.getElementById('volume-slider');
+const progressBar = document.querySelector('.progress-bar');
+const progressFill = document.getElementById('progress-fill');
+const currentTimeDisplay = document.getElementById('current-time');
+const totalTimeDisplay = document.getElementById('total-time');
+
+// Music player event listeners
+musicToggle.addEventListener('click', togglePlayPause);
+searchBtn.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    if (query) {
+        searchYouTube(query);
+    }
 });
+
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query) {
+            searchYouTube(query);
+        }
+    }
+});
+
+prevBtn.addEventListener('click', previousTrack);
+nextBtn.addEventListener('click', nextTrack);
+shuffleBtn.addEventListener('click', toggleShuffle);
+volumeSlider.addEventListener('input', updateVolumeFromSlider);
 
 // Progress bar click
 progressBar.addEventListener('click', (e) => {
-    if (audioPlayer.duration) {
+    if (youtubePlayer && youtubePlayer.getDuration) {
         const rect = progressBar.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const width = rect.width;
-        const newTime = (clickX / width) * audioPlayer.duration;
-        audioPlayer.currentTime = newTime;
+        const duration = youtubePlayer.getDuration();
+        const newTime = (clickX / width) * duration;
+        youtubePlayer.seekTo(newTime);
     }
 });
 
-// Previous track
-prevBtn.addEventListener('click', () => {
-    currentTrackIndex = currentTrackIndex > 0 ? currentTrackIndex - 1 : playlist.length - 1;
-    loadTrack(currentTrackIndex);
+const togglePlayPause = () => {
+    if (!youtubePlayer) {
+        console.error('YouTube player not ready');
+        return;
+    }
+    
     if (isPlaying) {
-        playMusic();
+        youtubePlayer.pauseVideo();
+    } else {
+        youtubePlayer.playVideo();
     }
-});
+};
 
-// Next track
-nextBtn.addEventListener('click', nextTrack);
+const updatePlayPauseButton = () => {
+    if (isPlaying) {
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+    } else {
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+    }
+};
+
+const previousTrack = () => {
+    if (currentPlaylist.length === 0) return;
+    
+    currentTrackIndex = currentTrackIndex > 0 ? currentTrackIndex - 1 : currentPlaylist.length - 1;
+    const track = currentPlaylist[currentTrackIndex];
+    playTrack(track.videoId, track.title, track.channel);
+};
 
 const nextTrack = () => {
-    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-    loadTrack(currentTrackIndex);
-    if (isPlaying) {
-        playMusic();
+    if (currentPlaylist.length === 0) return;
+    
+    currentTrackIndex = (currentTrackIndex + 1) % currentPlaylist.length;
+    const track = currentPlaylist[currentTrackIndex];
+    playTrack(track.videoId, track.title, track.channel);
+};
+
+const toggleShuffle = () => {
+    // Simple shuffle implementation
+    if (currentPlaylist.length > 1) {
+        currentPlaylist.sort(() => Math.random() - 0.5);
+        currentTrackIndex = 0;
+        shuffleBtn.style.color = shuffleBtn.style.color === 'var(--primary-color)' ? '' : 'var(--primary-color)';
+    }
+};
+
+const updateVolumeFromSlider = () => {
+    if (youtubePlayer && youtubePlayer.setVolume) {
+        youtubePlayer.setVolume(volumeSlider.value);
+    }
+};
+
+// Progress tracking
+let progressInterval;
+
+const startProgressUpdate = () => {
+    clearInterval(progressInterval);
+    progressInterval = setInterval(updateProgress, 1000);
+};
+
+const updateProgress = () => {
+    if (youtubePlayer && youtubePlayer.getCurrentTime && youtubePlayer.getDuration) {
+        const currentTime = youtubePlayer.getCurrentTime();
+        const duration = youtubePlayer.getDuration();
+        
+        if (duration > 0) {
+            const progress = (currentTime / duration) * 100;
+            progressFill.style.width = progress + '%';
+            currentTimeDisplay.textContent = formatTime(currentTime);
+            totalTimeDisplay.textContent = formatTime(duration);
+        }
     }
 };
 
 // Format time helper
 const formatTime = (seconds) => {
-    if (isNaN(seconds)) return '0:00';
+    if (isNaN(seconds) || seconds < 0) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Add pulse animation for play button
-const addPulseAnimation = () => {
+// Initialize YouTube player when DOM loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize YouTube player
+    initYouTubePlayer();
+    
+    // Add pulse animation
     const style = document.createElement('style');
     style.textContent = `
         @keyframes pulse {
@@ -430,12 +589,6 @@ const addPulseAnimation = () => {
         }
     `;
     document.head.appendChild(style);
-};
-
-// Initialize everything when DOM loads
-document.addEventListener('DOMContentLoaded', () => {
-    initMusicPlayer();
-    addPulseAnimation();
 });
 
 // DOM elements
