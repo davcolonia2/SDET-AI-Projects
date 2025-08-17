@@ -670,11 +670,18 @@ html {
     transition: var(--transition);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    position: relative;
 }
 
 .search-result-item:hover {
-    background: var(--surface-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.search-result-item:hover .result-title,
+.search-result-item:hover .result-channel {
+    color: white;
 }
 
 .search-result-item:last-child {
@@ -682,8 +689,8 @@ html {
 }
 
 .result-thumbnail {
-    width: 40px;
-    height: 30px;
+    width: 50px;
+    height: 38px;
     background: var(--border-color);
     border-radius: 4px;
     flex-shrink: 0;
@@ -699,17 +706,25 @@ html {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.3;
+    margin-bottom: 0.25rem;
 }
 
 .result-channel {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.result-play-btn {
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: var(--transition);
+}
+
+.search-result-item:hover .result-play-btn {
+    opacity: 1;
+    transform: scale(1.2);
 }
 
 .api-notice {
@@ -747,7 +762,19 @@ html {
     transition: var(--transition);
 }
 
-.api-test-btn:hover {
+.retry-btn {
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.8rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: var(--transition);
+}
+
+.retry-btn:hover {
     background: var(--accent-color);
 }
 

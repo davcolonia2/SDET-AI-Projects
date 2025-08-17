@@ -293,8 +293,9 @@
                             <button class="search-btn" id="search-btn">🔍</button>
                         </div>
                         <div class="current-track">
-                            <div class="song-title" id="current-title">Search for music</div>
-                            <div class="song-artist" id="current-artist">Click search to get started</div>
+                            <div class="song-title" id="current-title">Loading default song...</div>
+                            <div class="song-artist" id="current-artist">Please wait...</div>
+                            <button class="retry-btn" id="retry-btn" onclick="retryDefaultSong()" style="display: none;">🔄 Retry Loading</button>
                         </div>
                         <div class="search-results" id="search-results" style="display: none;">
                             <!-- Search results will be populated here -->
@@ -317,13 +318,7 @@
                             </div>
                         </div>
                         <div class="api-notice">
-                            <small>🔑 YouTube API Setup Required</small>
-                            <div class="api-setup-steps">
-                                <strong>Quick Setup:</strong><br>
-                                1. Get free API key from Google Cloud Console<br>
-                                2. Enable YouTube Data API v3<br>
-                                3. Add key to script.js (line 2)<br>
-                            </div>
+                            <small>⚠️ Add your YouTube API key to enable music search</small>
                             <button class="api-test-btn" onclick="testApiKey()">Test API Key</button>
                         </div>
                     </div>
@@ -339,6 +334,7 @@
         </div>
     </footer>
 
+    <script src="dependencies.txt"></script>
     <script src="script.js"></script>
 </body>
 </html>
