@@ -334,7 +334,18 @@
         </div>
     </footer>
 
-    <script src="dependencies.txt"></script>
+    <script src="config.js"></script>
+    <script>
+        // Inline dependencies using external config
+        const CONFIG = {
+            token: window.API_CONFIG?.YOUTUBE_API_KEY || 'DEMO_MODE',
+            appName: 'David Colonia Portfolio',
+            version: '1.0.0'
+        };
+        window.PORTFOLIO_CONFIG = CONFIG;
+        console.log('✅ Dependencies loaded with external config!');
+        console.log('🔑 API Key status:', CONFIG.token !== 'DEMO_MODE' ? 'Loaded' : 'Demo Mode');
+    </script>
     <script src="script.js"></script>
 </body>
 </html>

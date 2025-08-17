@@ -2,6 +2,28 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM loaded, initializing...');
     
+    // DEBUG: Check if dependencies.js loaded immediately
+    console.log('🔍 Immediate check - PORTFOLIO_CONFIG exists:', !!window.PORTFOLIO_CONFIG);
+    if (window.PORTFOLIO_CONFIG) {
+        console.log('✅ Dependencies.js loaded successfully:', window.PORTFOLIO_CONFIG);
+    } else {
+        console.log('❌ Dependencies.js not loaded yet, will check again...');
+        
+        // Check again after a delay
+        setTimeout(() => {
+            console.log('🔍 Delayed check - PORTFOLIO_CONFIG exists:', !!window.PORTFOLIO_CONFIG);
+            if (window.PORTFOLIO_CONFIG) {
+                console.log('✅ Dependencies.js loaded after delay:', window.PORTFOLIO_CONFIG);
+            } else {
+                console.error('❌ Dependencies.js still not loaded after 3 seconds');
+                console.log('🔍 Checking all script tags:');
+                document.querySelectorAll('script').forEach((script, index) => {
+                    console.log(`Script ${index}:`, script.src || script.innerHTML.substring(0, 50));
+                });
+            }
+        }, 3000);
+    }
+    
     // DOM elements - moved inside DOMContentLoaded to ensure elements exist
     const hamburger = document.getElementById('hamburger');
     const navMenu = document.getElementById('nav-menu');
@@ -257,15 +279,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== YOUTUBE MUSIC PLAYER ====================
 
-// API Configuration
+// API Configuration with enhanced debugging
 const getApiKey = () => {
-    console.log('🔍 Getting API key from config...');
-    if (window.PORTFOLIO_CONFIG && window.PORTFOLIO_CONFIG.token) {
-        console.log('✅ API key found in config');
+    console.log('🔍 getApiKey() called');
+    console.log('📄 Checking window.PORTFOLIO_CONFIG...');
+    console.log('🌐 window.PORTFOLIO_CONFIG exists:', !!window.PORTFOLIO_CONFIG);
+    
+    if (window.PORTFOLIO_CONFIG) {
+        console.log('📋 Config object:', window.PORTFOLIO_CONFIG);
+        console.log('🔑 Token value:', window.PORTFOLIO_CONFIG.token ? 'Present' : 'Missing');
         return window.PORTFOLIO_CONFIG.token;
+    } else {
+        console.log('❌ No PORTFOLIO_CONFIG found');
+        console.log('🔍 All window properties containing "CONFIG":');
+        Object.keys(window).filter(key => key.includes('CONFIG')).forEach(key => {
+            console.log(`  - ${key}:`, window[key]);
+        });
+        return null;
     }
-    console.log('❌ No API key found in config');
-    return null;
 };
 
 // Player variables
@@ -274,9 +305,12 @@ let currentPlaylist = [];
 let currentTrackIndex = 0;
 let isPlaying = false;
 
-// Initialize YouTube Player
+// Initialize YouTube Player with better fallback
 const initYouTubePlayer = () => {
     console.log('🎵 Initializing YouTube player...');
+    
+    // Set initial state for UI
+    updateCurrentTrackInfo('Setting up music player...', 'Please wait...');
     
     if (window.YT && window.YT.Player) {
         console.log('✅ YouTube API already loaded');
@@ -288,12 +322,43 @@ const initYouTubePlayer = () => {
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     tag.onerror = () => {
-        console.error('❌ Failed to load YouTube API');
+        console.error('❌ Failed to load YouTube API, using search-only mode');
+        enableSearchOnlyMode();
     };
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     
     window.onYouTubeIframeAPIReady = createPlayer;
+    
+    // Backup timeout in case API never loads
+    setTimeout(() => {
+        if (!youtubePlayer || typeof youtubePlayer.getPlayerState === 'undefined') {
+            console.log('⏰ YouTube API timeout, enabling search-only mode');
+            enableSearchOnlyMode();
+        }
+    }, 10000);
+};
+
+// Search-only mode when player fails
+const enableSearchOnlyMode = () => {
+    console.log('🔍 Enabling search-only mode');
+    updateCurrentTrackInfo('Search for music', 'Player will work after first search');
+    
+    // Create a dummy player object for compatibility
+    youtubePlayer = {
+        searchMode: true,
+        getPlayerState: () => -1,
+        playVideo: () => console.log('Play requested in search mode'),
+        pauseVideo: () => console.log('Pause requested in search mode'),
+        loadVideoById: (id) => {
+            console.log('Loading video in search mode:', id);
+            // Open video in new tab as fallback
+            window.open(`https://www.youtube.com/watch?v=${id}`, '_blank');
+        }
+    };
+    
+    isPlaying = false;
+    console.log('✅ Search-only mode ready');
 };
 
 const createPlayer = () => {
@@ -303,7 +368,7 @@ const createPlayer = () => {
         youtubePlayer = new YT.Player('youtube-player', {
             height: '0',
             width: '0',
-            videoId: '4vGPyznu-Ys',
+            videoId: 'rDWIA-hEAZQ', // New default video ID
             playerVars: {
                 autoplay: 0,
                 controls: 0,
@@ -323,41 +388,91 @@ const createPlayer = () => {
             }
         });
         console.log('✅ YouTube player created successfully');
+        
+        // Fallback: Check if player is ready manually after a delay
+        setTimeout(() => {
+            if (youtubePlayer && typeof youtubePlayer.getPlayerState === 'undefined') {
+                console.log('🔄 onPlayerReady never fired, checking manually...');
+                checkPlayerReadiness();
+            }
+        }, 5000);
+        
     } catch (error) {
         console.error('❌ Error creating YouTube player:', error);
     }
 };
 
+// Manual player readiness check
+const checkPlayerReadiness = () => {
+    console.log('🔍 Manually checking player readiness...');
+    
+    if (!youtubePlayer) {
+        console.log('❌ No player object');
+        return;
+    }
+    
+    // Sometimes the player methods become available without the ready event
+    if (typeof youtubePlayer.getPlayerState === 'function') {
+        console.log('✅ Player methods available, calling onPlayerReady manually');
+        onPlayerReady(null);
+    } else {
+        console.log('⏳ Player methods still not ready, trying to force initialization...');
+        
+        // Try to reinitialize
+        setTimeout(() => {
+            if (typeof youtubePlayer.getPlayerState === 'function') {
+                console.log('✅ Player methods now ready after wait');
+                onPlayerReady(null);
+            } else {
+                console.log('❌ Player initialization failed, using fallback');
+                // Set up basic functionality without player methods
+                updateCurrentTrackInfo('Manual Load Required', 'Search for music to start');
+            }
+        }, 3000);
+    }
+};
+
 const onPlayerReady = (event) => {
     console.log('✅ YouTube player ready!');
-    updateVolumeFromSlider();
     
-    try {
-        const playerState = youtubePlayer.getPlayerState();
-        console.log('Player state:', playerState);
-        
-        const videoData = youtubePlayer.getVideoData();
-        console.log('Video data:', videoData);
-        
-        if (videoData && videoData.title) {
-            updateCurrentTrackInfo(videoData.title, 'Ready to play!');
-            currentPlaylist = [{
-                videoId: '4vGPyznu-Ys',
-                title: videoData.title,
-                channel: 'Ready to play!'
-            }];
-            currentTrackIndex = 0;
-        } else {
-            setTimeout(() => {
+    // Wait a moment for all methods to be available
+    setTimeout(() => {
+        try {
+            // Test if methods are available
+            if (typeof youtubePlayer.getPlayerState === 'function') {
+                const playerState = youtubePlayer.getPlayerState();
+                console.log('Player state:', playerState);
+                
+                const videoData = youtubePlayer.getVideoData();
+                console.log('Video data:', videoData);
+                
+                if (videoData && videoData.title && videoData.title !== '') {
+                    updateCurrentTrackInfo(videoData.title, 'Ready to play!');
+                    currentPlaylist = [{
+                        videoId: 'rDWIA-hEAZQ',
+                        title: videoData.title,
+                        channel: 'Ready to play!'
+                    }];
+                    currentTrackIndex = 0;
+                    console.log('✅ Default song loaded from player data');
+                } else {
+                    console.log('No video data yet, loading manually...');
+                    loadDefaultSong();
+                }
+            } else {
+                console.log('Player methods not ready yet, trying manual load...');
                 loadDefaultSong();
-            }, 2000);
-        }
-    } catch (error) {
-        console.error('Error in onPlayerReady:', error);
-        setTimeout(() => {
+            }
+            
+            // Set up volume
+            updateVolumeFromSlider();
+            
+        } catch (error) {
+            console.error('Error in onPlayerReady:', error);
+            console.log('Falling back to manual song loading...');
             loadDefaultSong();
-        }, 2000);
-    }
+        }
+    }, 1000); // Wait 1 second for methods to be available
 };
 
 const onPlayerStateChange = (event) => {
@@ -395,10 +510,10 @@ const onPlayerError = (event) => {
 };
 
 const loadDefaultSong = async () => {
-    const defaultVideoId = '4vGPyznu-Ys';
+    const defaultVideoId = 'rDWIA-hEAZQ'; // New default video ID
     const apiKey = getApiKey();
     
-    console.log('Loading default song:', defaultVideoId);
+    console.log('Loading new default song:', defaultVideoId);
     updateCurrentTrackInfo('Loading song...', 'Please wait...');
     
     try {
@@ -429,17 +544,31 @@ const loadDefaultSong = async () => {
                             title: video.title,
                             channel: video.channelTitle
                         }];
+                    } else {
+                        console.log('No video data found, using fallback');
+                        updateCurrentTrackInfo('New Default Song', 'Click play to start');
                     }
+                } else {
+                    console.log('API request failed, using fallback');
+                    updateCurrentTrackInfo('New Default Song', 'Click play to start');
                 }
             } catch (apiError) {
                 console.log('API call failed, using fallback:', apiError);
-                updateCurrentTrackInfo('Background Music', 'Click play to start');
+                updateCurrentTrackInfo('New Default Song', 'Click play to start');
             }
         } else {
             console.log('No API key, using fallback');
-            updateCurrentTrackInfo('Background Music', 'Click play to start');
+            updateCurrentTrackInfo('New Default Song', 'Click play to start');
         }
         
+        // Always add to playlist regardless of API status
+        if (currentPlaylist.length === 0) {
+            currentPlaylist = [{
+                videoId: defaultVideoId,
+                title: 'New Default Song',
+                channel: 'Click play to start'
+            }];
+        }
         currentTrackIndex = 0;
         
     } catch (error) {
@@ -582,9 +711,24 @@ const displaySearchResults = (results) => {
 const playTrack = (videoId, title, channel) => {
     console.log('🎵 Loading track:', title, 'by', channel);
     
-    if (!youtubePlayer || !youtubePlayer.loadVideoById) {
+    if (!youtubePlayer) {
         console.error('❌ YouTube player not ready');
         updateCurrentTrackInfo('Player not ready', 'Try refreshing page');
+        return;
+    }
+    
+    // Check if we're in search-only mode
+    if (youtubePlayer.searchMode) {
+        console.log('🔍 Search-only mode: Opening video in new tab');
+        updateCurrentTrackInfo(title, `${channel} - Opening in new tab`);
+        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+        
+        // Update playlist for UI consistency
+        const trackExists = currentPlaylist.find(track => track.videoId === videoId);
+        if (!trackExists) {
+            currentPlaylist.push({ videoId, title, channel });
+            currentTrackIndex = currentPlaylist.length - 1;
+        }
         return;
     }
     
@@ -606,7 +750,10 @@ const playTrack = (videoId, title, channel) => {
         
     } catch (error) {
         console.error('❌ Error playing track:', error);
-        updateCurrentTrackInfo('Failed to load', 'Try another song');
+        // Fallback to opening in new tab
+        console.log('🔗 Falling back to new tab');
+        updateCurrentTrackInfo(title, `${channel} - Opening in new tab`);
+        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
     }
 };
 
@@ -619,6 +766,32 @@ const togglePlayPause = () => {
         return;
     }
     
+    // Handle search-only mode
+    if (youtubePlayer.searchMode) {
+        console.log('🔍 Search-only mode: Encouraging user to search');
+        updateCurrentTrackInfo('Search for music above', 'Then click a result to play');
+        return;
+    }
+    
+    // Check if player methods are available
+    if (typeof youtubePlayer.getPlayerState !== 'function') {
+        console.error('❌ Player methods not ready yet');
+        updateCurrentTrackInfo('Player loading...', 'Please wait a moment');
+        
+        // Try again after a delay
+        setTimeout(() => {
+            if (typeof youtubePlayer.getPlayerState === 'function') {
+                console.log('✅ Player methods now available, retrying...');
+                togglePlayPause();
+            } else {
+                console.error('❌ Player methods still not available');
+                // Enable search mode as fallback
+                enableSearchOnlyMode();
+            }
+        }, 2000);
+        return;
+    }
+    
     try {
         const playerState = youtubePlayer.getPlayerState();
         console.log('Current player state:', playerState);
@@ -626,13 +799,16 @@ const togglePlayPause = () => {
         if (playerState === YT.PlayerState.PLAYING) {
             console.log('⏸️ Pausing video');
             youtubePlayer.pauseVideo();
-        } else {
+        } else if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.CUED) {
             console.log('▶️ Playing video');
+            youtubePlayer.playVideo();
+        } else {
+            console.log('🔄 Player not ready, loading video first...');
             youtubePlayer.playVideo();
         }
     } catch (error) {
         console.error('❌ Error toggling play/pause:', error);
-        updateCurrentTrackInfo('Playback error', 'Try searching for music');
+        updateCurrentTrackInfo('Search for music', 'Use search above to get started');
     }
 };
 
@@ -747,6 +923,71 @@ window.retryDefaultSong = () => {
     loadDefaultSong();
 };
 
+// Manual player force initialization
+window.forcePlayerInit = () => {
+    console.log('🚀 Forcing player initialization...');
+    if (youtubePlayer) {
+        console.log('Player object exists, checking readiness...');
+        checkPlayerReadiness();
+    } else {
+        console.log('No player object, recreating...');
+        createPlayer();
+    }
+};
+
+// Simple play test
+window.testPlay = () => {
+    console.log('🎵 Testing direct play...');
+    if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
+        try {
+            youtubePlayer.playVideo();
+            console.log('✅ Direct play attempted');
+        } catch (error) {
+            console.log('❌ Direct play failed:', error);
+        }
+    } else {
+        console.log('❌ Player or playVideo method not available');
+        
+        // Try to use the search function instead
+        console.log('🔍 Trying search method as fallback...');
+        searchYouTube('lofi hip hop');
+    }
+};
+
+// Enhanced debugging function for dependencies
+window.debugDependencies = () => {
+    console.log('🔍 === DEPENDENCIES DEBUG ===');
+    console.log('1. Checking script tags in HTML:');
+    document.querySelectorAll('script').forEach((script, index) => {
+        if (script.src) {
+            console.log(`   Script ${index}: ${script.src} (${script.src.includes('dependencies') ? '✅ DEPENDENCIES' : ''})`);
+        } else {
+            console.log(`   Script ${index}: Inline script (${script.innerHTML.substring(0, 50)}...)`);
+        }
+    });
+    
+    console.log('2. Checking window.PORTFOLIO_CONFIG:', window.PORTFOLIO_CONFIG);
+    console.log('3. Checking for any CONFIG variables:');
+    Object.keys(window).filter(key => key.includes('CONFIG')).forEach(key => {
+        console.log(`   - ${key}:`, window[key]);
+    });
+    
+    console.log('4. File loading test:');
+    fetch('./dependencies.js')
+        .then(response => {
+            console.log('   Dependencies.js fetch status:', response.status);
+            return response.text();
+        })
+        .then(text => {
+            console.log('   Dependencies.js content preview:', text.substring(0, 100));
+        })
+        .catch(error => {
+            console.log('   Dependencies.js fetch error:', error.message);
+        });
+    
+    console.log('=== END DEBUG ===');
+};
+
 window.testApiKey = async () => {
     console.log('🧪 Testing API key...');
     
@@ -795,13 +1036,29 @@ window.checkMusicPlayerStatus = () => {
     console.log('Player object exists:', !!youtubePlayer);
     
     if (youtubePlayer) {
-        try {
-            console.log('Player state:', youtubePlayer.getPlayerState());
-            console.log('Video data:', youtubePlayer.getVideoData());
-            console.log('Current time:', youtubePlayer.getCurrentTime());
-            console.log('Duration:', youtubePlayer.getDuration());
-        } catch (error) {
-            console.log('Error accessing player methods:', error);
+        console.log('Player object type:', typeof youtubePlayer);
+        console.log('Player methods available:');
+        console.log('  - getPlayerState:', typeof youtubePlayer.getPlayerState);
+        console.log('  - getVideoData:', typeof youtubePlayer.getVideoData);
+        console.log('  - playVideo:', typeof youtubePlayer.playVideo);
+        console.log('  - pauseVideo:', typeof youtubePlayer.pauseVideo);
+        
+        // Only try to call methods if they exist
+        if (typeof youtubePlayer.getPlayerState === 'function') {
+            try {
+                console.log('Player state:', youtubePlayer.getPlayerState());
+                console.log('Video data:', youtubePlayer.getVideoData());
+                if (typeof youtubePlayer.getCurrentTime === 'function') {
+                    console.log('Current time:', youtubePlayer.getCurrentTime());
+                }
+                if (typeof youtubePlayer.getDuration === 'function') {
+                    console.log('Duration:', youtubePlayer.getDuration());
+                }
+            } catch (error) {
+                console.log('Error calling player methods:', error);
+            }
+        } else {
+            console.log('❌ Player methods not available yet');
         }
     }
     
