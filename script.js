@@ -339,26 +339,141 @@ const initYouTubePlayer = () => {
     }, 10000);
 };
 
-// Search-only mode when player fails
+// Enhanced search-only mode with embedded iframe fallback
 const enableSearchOnlyMode = () => {
-    console.log('🔍 Enabling search-only mode');
-    updateCurrentTrackInfo('Search for music', 'Player will work after first search');
+    console.log('🔍 Enabling enhanced search mode with embedded playback');
+    updateCurrentTrackInfo('Search for music', 'Embedded player ready');
     
-    // Create a dummy player object for compatibility
+    // Create enhanced player object with iframe fallback
     youtubePlayer = {
         searchMode: true,
-        getPlayerState: () => -1,
-        playVideo: () => console.log('Play requested in search mode'),
-        pauseVideo: () => console.log('Pause requested in search mode'),
-        loadVideoById: (id) => {
-            console.log('Loading video in search mode:', id);
-            // Open video in new tab as fallback
-            window.open(`https://www.youtube.com/watch?v=${id}`, '_blank');
+        currentVideoId: null,
+        isPlaying: false,
+        
+        getPlayerState() {
+            return this.isPlaying ? 1 : 2;
+        },
+        
+        playVideo() {
+            console.log('▶️ Play requested in enhanced mode');
+            if (this.currentVideoId) {
+                this.createEmbeddedPlayer(this.currentVideoId);
+                this.isPlaying = true;
+                updatePlayPauseButton();
+            }
+        },
+        
+        pauseVideo() {
+            console.log('⏸️ Pause requested in enhanced mode');
+            this.removeEmbeddedPlayer();
+            this.isPlaying = false;
+            updatePlayPauseButton();
+        },
+        
+        loadVideoById(videoId) {
+            console.log('🎵 Loading video in enhanced mode:', videoId);
+            this.currentVideoId = videoId;
+            this.createEmbeddedPlayer(videoId);
+            this.isPlaying = true;
+            updatePlayPauseButton();
+        },
+        
+        createEmbeddedPlayer(videoId) {
+            // Remove existing player
+            this.removeEmbeddedPlayer();
+            
+            console.log('🎵 Creating embedded player for:', videoId);
+            
+            // Create player container in the music info dropdown
+            const musicInfo = document.getElementById('music-info');
+            if (!musicInfo) {
+                console.error('❌ Music info container not found');
+                return;
+            }
+            
+            let playerContainer = document.getElementById('embedded-player-display');
+            if (!playerContainer) {
+                playerContainer = document.createElement('div');
+                playerContainer.id = 'embedded-player-display';
+                musicInfo.appendChild(playerContainer);
+            }
+            
+            // Create a more robust player container
+            playerContainer.innerHTML = `
+                <div style="margin-top: 1rem; border-radius: 8px; overflow: hidden; background: var(--background-color); border: 1px solid var(--border-color);">
+                    <div style="padding: 0.5rem; background: var(--surface-color); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.875rem; color: var(--text-primary); font-weight: 600;">🎵 Now Playing</span>
+                        <button onclick="youtubePlayer.removeEmbeddedPlayer()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1rem;">✕</button>
+                    </div>
+                    <div id="iframe-container" style="position: relative;">
+                        <iframe 
+                            id="embedded-youtube-player"
+                            width="100%" 
+                            height="200"
+                            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=1&rel=0&modestbranding=1&fs=0&disablekb=1&iv_load_policy=3&playsinline=1"
+                            frameborder="0"
+                            allow="autoplay; encrypted-media"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            style="border: none; background: #000;">
+                        </iframe>
+                        <div id="iframe-fallback" style="display: none; padding: 2rem; text-align: center; background: var(--surface-color);">
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Embedded player unavailable</p>
+                            <button onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')" 
+                                    style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                                🎵 Open in YouTube
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            playerContainer.style.display = 'block';
+            
+            // Set up error handling for the iframe
+            const iframe = document.getElementById('embedded-youtube-player');
+            const fallback = document.getElementById('iframe-fallback');
+            
+            if (iframe && fallback) {
+                // Show fallback if iframe fails to load after 5 seconds
+                const timeout = setTimeout(() => {
+                    console.log('⏰ Iframe timeout, showing fallback');
+                    iframe.style.display = 'none';
+                    fallback.style.display = 'block';
+                }, 5000);
+                
+                iframe.onload = () => {
+                    console.log('✅ Iframe loaded successfully');
+                    clearTimeout(timeout);
+                };
+                
+                iframe.onerror = () => {
+                    console.log('❌ Iframe failed, showing fallback');
+                    clearTimeout(timeout);
+                    iframe.style.display = 'none';
+                    fallback.style.display = 'block';
+                };
+            }
+            
+            console.log('✅ Enhanced embedded player created with fallback');
+        },
+        
+        removeEmbeddedPlayer() {
+            const existingPlayer = document.getElementById('embedded-youtube-player');
+            if (existingPlayer) {
+                existingPlayer.remove();
+                console.log('🗑️ Embedded player removed');
+            }
+            
+            const playerContainer = document.getElementById('embedded-player-display');
+            if (playerContainer) {
+                playerContainer.style.display = 'none';
+                playerContainer.innerHTML = '';
+            }
         }
     };
     
     isPlaying = false;
-    console.log('✅ Search-only mode ready');
+    console.log('✅ Enhanced search mode ready');
 };
 
 const createPlayer = () => {
@@ -717,43 +832,36 @@ const playTrack = (videoId, title, channel) => {
         return;
     }
     
+    // Update UI immediately
+    updateCurrentTrackInfo(title, channel);
+    
+    // Add to playlist
+    const trackExists = currentPlaylist.find(track => track.videoId === videoId);
+    if (!trackExists) {
+        currentPlaylist.push({ videoId, title, channel });
+        currentTrackIndex = currentPlaylist.length - 1;
+    } else {
+        currentTrackIndex = currentPlaylist.findIndex(track => track.videoId === videoId);
+    }
+    
     // Check if we're in search-only mode
     if (youtubePlayer.searchMode) {
-        console.log('🔍 Search-only mode: Opening video in new tab');
-        updateCurrentTrackInfo(title, `${channel} - Opening in new tab`);
-        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
-        
-        // Update playlist for UI consistency
-        const trackExists = currentPlaylist.find(track => track.videoId === videoId);
-        if (!trackExists) {
-            currentPlaylist.push({ videoId, title, channel });
-            currentTrackIndex = currentPlaylist.length - 1;
-        }
+        console.log('🎵 Enhanced mode: Creating embedded player');
+        youtubePlayer.loadVideoById(videoId);
+        console.log('📝 Track loaded in enhanced mode');
         return;
     }
     
     try {
         youtubePlayer.loadVideoById(videoId);
-        console.log('✅ Video loaded successfully');
-        
-        updateCurrentTrackInfo(title, channel);
-        
-        const trackExists = currentPlaylist.find(track => track.videoId === videoId);
-        if (!trackExists) {
-            currentPlaylist.push({ videoId, title, channel });
-            currentTrackIndex = currentPlaylist.length - 1;
-        } else {
-            currentTrackIndex = currentPlaylist.findIndex(track => track.videoId === videoId);
-        }
-        
-        console.log('📝 Track added to playlist. Position:', currentTrackIndex);
+        console.log('✅ Video loaded successfully in normal mode');
         
     } catch (error) {
         console.error('❌ Error playing track:', error);
-        // Fallback to opening in new tab
-        console.log('🔗 Falling back to new tab');
-        updateCurrentTrackInfo(title, `${channel} - Opening in new tab`);
-        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+        // Fallback to enhanced mode
+        console.log('🔄 Falling back to enhanced mode');
+        enableSearchOnlyMode();
+        youtubePlayer.loadVideoById(videoId);
     }
 };
 
