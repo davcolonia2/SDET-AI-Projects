@@ -2,28 +2,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM loaded, initializing...');
     
-    // DEBUG: Check if dependencies.js loaded immediately
-    console.log('🔍 Immediate check - PORTFOLIO_CONFIG exists:', !!window.PORTFOLIO_CONFIG);
-    if (window.PORTFOLIO_CONFIG) {
-        console.log('✅ Dependencies.js loaded successfully:', window.PORTFOLIO_CONFIG);
-    } else {
-        console.log('❌ Dependencies.js not loaded yet, will check again...');
-        
-        // Check again after a delay
-        setTimeout(() => {
-            console.log('🔍 Delayed check - PORTFOLIO_CONFIG exists:', !!window.PORTFOLIO_CONFIG);
-            if (window.PORTFOLIO_CONFIG) {
-                console.log('✅ Dependencies.js loaded after delay:', window.PORTFOLIO_CONFIG);
-            } else {
-                console.error('❌ Dependencies.js still not loaded after 3 seconds');
-                console.log('🔍 Checking all script tags:');
-                document.querySelectorAll('script').forEach((script, index) => {
-                    console.log(`Script ${index}:`, script.src || script.innerHTML.substring(0, 50));
-                });
-            }
-        }, 3000);
-    }
-    
     // DOM elements - moved inside DOMContentLoaded to ensure elements exist
     const hamburger = document.getElementById('hamburger');
     const navMenu = document.getElementById('nav-menu');
@@ -248,27 +226,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createScrollToTop();
 
-    // Initialize Web Audio Player (REPLACED YouTube player)
+    // Initialize Web Audio Player (REPLACED YouTube player completely)
     console.log('🎵 Starting Web Audio Player initialization...');
     initWebAudioPlayer();
     
-    // Add playlist button after a delay
+    // Wait for player to initialize before adding playlist button
     setTimeout(() => {
         const musicInfo = document.getElementById('music-info');
         if (musicInfo && webAudioPlayer) {
-            const playlistBtn = document.createElement('button');
-            playlistBtn.textContent = '📋 Show Playlist';
-            playlistBtn.className = 'api-test-btn';
-            playlistBtn.onclick = () => webAudioPlayer.showPlaylist();
-            playlistBtn.style.marginTop = '0.5rem';
-            playlistBtn.style.width = '100%';
-            
-            const uploadContainer = musicInfo.querySelector('.upload-container');
-            if (uploadContainer) {
-                uploadContainer.appendChild(playlistBtn);
+            // Only add playlist button if files were loaded
+            if (webAudioPlayer.playlist.length > 0) {
+                const playlistBtn = document.createElement('button');
+                playlistBtn.textContent = '📋 Show Playlist';
+                playlistBtn.className = 'api-test-btn';
+                playlistBtn.onclick = () => webAudioPlayer.showPlaylist();
+                playlistBtn.style.marginTop = '0.5rem';
+                playlistBtn.style.width = '100%';
+                
+                const uploadContainer = musicInfo.querySelector('.upload-container');
+                if (uploadContainer) {
+                    uploadContainer.appendChild(playlistBtn);
+                }
             }
         }
-    }, 2000);
+    }, 3000); // Give more time for file detection
     
     // Add pulse animation
     const style = document.createElement('style');
@@ -390,6 +371,21 @@ document.addEventListener('DOMContentLoaded', () => {
         .track-controls button:hover {
             opacity: 1;
         }
+        
+        .api-test-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        .api-test-btn:hover {
+            background: var(--primary-dark);
+        }
     `;
     document.head.appendChild(style);
 
@@ -416,48 +412,34 @@ class WebAudioPlayer {
         this.volume = 0.5;
         this.progressUpdateInterval = null;
         
-        // Default playlist - add your own music files here
-        this.defaultPlaylist = [
-            {
-                title: "Ambient Lofi",
-                artist: "Portfolio Music",
-                file: "audio/ambient-lofi.mp3",
-                duration: 180
-            },
-            {
-                title: "Chill Beats",
-                artist: "Background Music",
-                file: "audio/chill-beats.mp3",
-                duration: 195
-            },
-            {
-                title: "Focus Music",
-                artist: "Productivity",
-                file: "audio/focus-music.mp3",
-                duration: 210
-            }
-        ];
-        
         this.init();
     }
     
     async init() {
         try {
+            console.log('Initializing Web Audio Player...');
+            
             // Initialize Web Audio API
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.gainNode = this.audioContext.createGain();
             this.analyser = this.audioContext.createAnalyser();
             
+            // Configure analyser for visualizer
+            this.analyser.fftSize = 256;
+            this.analyser.smoothingTimeConstant = 0.8;
+            this.bufferLength = this.analyser.frequencyBinCount;
+            this.dataArray = new Uint8Array(this.bufferLength);
+            
             this.gainNode.connect(this.audioContext.destination);
             this.analyser.connect(this.gainNode);
             this.gainNode.gain.value = this.volume;
             
-            // Set up playlist
-            this.playlist = [...this.defaultPlaylist];
-            
-            // Initialize UI
+            // Set up UI first
             this.setupEventListeners();
-            this.updateCurrentTrackInfo();
+            this.setupFileUpload();
+            
+            // Try to load default files from audio folder
+            await this.loadDefaultFiles();
             
             console.log('Web Audio Player initialized successfully');
             
@@ -465,6 +447,99 @@ class WebAudioPlayer {
             console.error('Error initializing Web Audio Player:', error);
             this.showError('Audio not supported in this browser');
         }
+    }
+    
+    async loadDefaultFiles() {
+        console.log('Looking for audio files in project folder...');
+        this.updateCurrentTrackInfo('Looking for audio files...', 'Checking audio folder...');
+        
+        // Files to try loading automatically
+        const filesToTry = [
+            'audio/default.m4a',
+            'audio/demo.m4a',
+            'audio/background.m4a',
+            'audio/music.m4a',
+            'audio/default.mp3',
+            'audio/demo.mp3',
+            'audio/track.m4a',
+            'audio/song.m4a'
+        ];
+        
+        let fileLoaded = false;
+        
+        for (const filePath of filesToTry) {
+            try {
+                console.log(`Attempting to load: ${filePath}`);
+                
+                const audio = new Audio();
+                const canLoad = await new Promise((resolve) => {
+                    const timeout = setTimeout(() => {
+                        console.log(`Timeout for ${filePath}`);
+                        resolve(false);
+                    }, 3000);
+                    
+                    audio.addEventListener('loadedmetadata', () => {
+                        console.log(`Successfully detected: ${filePath}`);
+                        clearTimeout(timeout);
+                        resolve(true);
+                    });
+                    
+                    audio.addEventListener('error', () => {
+                        console.log(`File not found: ${filePath}`);
+                        clearTimeout(timeout);
+                        resolve(false);
+                    });
+                    
+                    audio.src = filePath;
+                });
+                
+                if (canLoad) {
+                    // File found! Add to playlist
+                    const track = {
+                        title: this.extractTitleFromPath(filePath),
+                        artist: 'Portfolio Music',
+                        file: filePath,
+                        duration: Math.floor(audio.duration) || 0,
+                        isDefault: true
+                    };
+                    
+                    this.playlist.push(track);
+                    this.currentTrackIndex = 0;
+                    fileLoaded = true;
+                    
+                    console.log(`Loaded default track: ${track.title} (${track.duration}s)`);
+                    break; // Stop after first successful file
+                }
+                
+            } catch (error) {
+                console.log(`Error with ${filePath}:`, error.message);
+            }
+        }
+        
+        if (fileLoaded) {
+            this.updateCurrentTrackInfo();
+            console.log('Default audio file ready to play');
+            
+            // Attempt auto-play
+            setTimeout(async () => {
+                console.log('Attempting auto-play...');
+                try {
+                    await this.play();
+                } catch (error) {
+                    console.log('Auto-play blocked by browser - this is normal');
+                    this.showReadyToPlay();
+                }
+            }, 2000);
+            
+        } else {
+            console.log('No audio files found in audio folder');
+            this.updateCurrentTrackInfo('No audio files found', 'Add files to audio folder or upload files');
+        }
+    }
+    
+    extractTitleFromPath(filePath) {
+        const fileName = filePath.split('/').pop().replace(/\.[^/.]+$/, '');
+        return fileName.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
     setupEventListeners() {
@@ -499,30 +574,30 @@ class WebAudioPlayer {
         if (progressBar) {
             progressBar.addEventListener('click', (e) => this.seek(e));
         }
-        
-        // File upload functionality
-        this.setupFileUpload();
     }
     
     setupFileUpload() {
-        // Create file upload interface
         const musicInfo = document.getElementById('music-info');
         if (!musicInfo) return;
         
-        // Check if search container exists and replace it
+        // Hide API-related elements since we don't need them
+        const apiNotice = document.querySelector('.api-notice');
+        if (apiNotice) {
+            apiNotice.style.display = 'none';
+        }
+        
+        // Replace search container with upload interface
         const searchContainer = musicInfo.querySelector('.search-container');
         if (searchContainer) {
             const uploadContainer = document.createElement('div');
             uploadContainer.className = 'upload-container';
             uploadContainer.innerHTML = `
-                <div class="file-upload-section">
-                    <input type="file" id="audio-file-input" accept="audio/*" multiple style="display: none;">
-                    <button class="upload-btn" onclick="document.getElementById('audio-file-input').click()">
-                        📁 Add Music Files
-                    </button>
-                    <div class="upload-info">
-                        <small>Supports MP3, WAV, OGG, M4A</small>
-                    </div>
+                <input type="file" id="audio-file-input" accept="audio/*" multiple style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('audio-file-input').click()">
+                    📁 Add Music Files
+                </button>
+                <div class="upload-info">
+                    <small>Supports MP3, M4A, WAV, OGG</small>
                 </div>
             `;
             
@@ -533,12 +608,6 @@ class WebAudioPlayer {
                 fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
             }
         }
-        
-        // Hide API notice since we don't need it
-        const apiNotice = document.querySelector('.api-notice');
-        if (apiNotice) {
-            apiNotice.style.display = 'none';
-        }
     }
     
     handleFileUpload(event) {
@@ -547,9 +616,9 @@ class WebAudioPlayer {
         files.forEach(file => {
             if (file.type.startsWith('audio/')) {
                 const fileURL = URL.createObjectURL(file);
-                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                const fileName = file.name.replace(/\.[^/.]+$/, '');
                 
-                let artist = "Unknown Artist";
+                let artist = 'Unknown Artist';
                 let title = fileName;
                 
                 if (fileName.includes(' - ')) {
@@ -581,7 +650,7 @@ class WebAudioPlayer {
         searchResults.innerHTML = `
             <div class="playlist-header">
                 <h4>Your Playlist (${this.playlist.length} tracks)</h4>
-                <button onclick="webAudioPlayer.hidePlaylist()" style="float: right;">✕</button>
+                <button onclick="webAudioPlayer.hidePlaylist()">✕</button>
             </div>
             <div class="playlist-items">
                 ${this.playlist.map((track, index) => `
@@ -593,6 +662,7 @@ class WebAudioPlayer {
                         </div>
                         <div class="track-controls">
                             ${track.isLocal ? '<span class="local-file">📁</span>' : ''}
+                            ${track.isDefault ? '<span class="local-file">🏠</span>' : ''}
                             <button onclick="event.stopPropagation(); webAudioPlayer.removeTrack(${index})">🗑️</button>
                         </div>
                     </div>
@@ -637,12 +707,11 @@ class WebAudioPlayer {
             console.log(`Loading track: ${track.title}`);
             
             this.currentAudio = new Audio(track.file);
-            this.currentAudio.crossOrigin = "anonymous";
+            this.currentAudio.crossOrigin = 'anonymous';
             
             await new Promise((resolve, reject) => {
                 this.currentAudio.addEventListener('loadedmetadata', resolve);
                 this.currentAudio.addEventListener('error', reject);
-                this.currentAudio.load();
             });
             
             this.duration = this.currentAudio.duration;
@@ -655,6 +724,9 @@ class WebAudioPlayer {
             
             this.currentSource = this.audioContext.createMediaElementSource(this.currentAudio);
             this.currentSource.connect(this.analyser);
+            
+            // Connect analyser to gain node for visualizer data
+            this.analyser.connect(this.gainNode);
             
             this.currentAudio.addEventListener('ended', () => this.nextTrack());
             this.currentAudio.addEventListener('timeupdate', () => this.updateProgress());
@@ -689,6 +761,9 @@ class WebAudioPlayer {
             this.updatePlayPauseButton();
             this.startProgressUpdate();
             
+           
+            console.log(`Now playing: ${this.playlist[this.currentTrackIndex]?.title}`);
+            
         } catch (error) {
             console.error('Error playing audio:', error);
             this.showError('Playback failed');
@@ -701,6 +776,8 @@ class WebAudioPlayer {
             this.isPlaying = false;
             this.updatePlayPauseButton();
             this.stopProgressUpdate();
+            
+           
         }
     }
     
@@ -740,11 +817,13 @@ class WebAudioPlayer {
     }
     
     async nextTrack() {
+        if (this.playlist.length === 0) return;
         const nextIndex = (this.currentTrackIndex + 1) % this.playlist.length;
         await this.playTrackByIndex(nextIndex);
     }
     
     async previousTrack() {
+        if (this.playlist.length === 0) return;
         const prevIndex = this.currentTrackIndex > 0 
             ? this.currentTrackIndex - 1 
             : this.playlist.length - 1;
@@ -796,13 +875,19 @@ class WebAudioPlayer {
         this.updateProgress();
     }
     
-    updateCurrentTrackInfo() {
+    updateCurrentTrackInfo(titleOverride, artistOverride) {
         const titleEl = document.getElementById('current-title');
         const artistEl = document.getElementById('current-artist');
         
+        if (titleOverride && artistOverride) {
+            if (titleEl) titleEl.textContent = titleOverride;
+            if (artistEl) artistEl.textContent = artistOverride;
+            return;
+        }
+        
         if (this.playlist.length === 0) {
             if (titleEl) titleEl.textContent = 'No music loaded';
-            if (artistEl) artistEl.textContent = 'Upload audio files to get started';
+            if (artistEl) artistEl.textContent = 'Add files to audio folder or upload files';
             return;
         }
         
@@ -810,6 +895,20 @@ class WebAudioPlayer {
         
         if (titleEl) titleEl.textContent = currentTrack.title;
         if (artistEl) artistEl.textContent = currentTrack.artist;
+    }
+    
+    showReadyToPlay() {
+        const playIcon = document.querySelector('.play-icon');
+        const musicToggle = document.getElementById('music-toggle');
+        
+        if (playIcon && musicToggle) {
+            playIcon.style.animation = 'pulse 2s infinite';
+            musicToggle.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.3)';
+            
+            if (this.playlist.length > 0) {
+                this.updateCurrentTrackInfo(this.playlist[0].title + ' ♪', 'Click play to start music');
+            }
+        }
     }
     
     updatePlayPauseButton() {
@@ -902,9 +1001,8 @@ class WebAudioPlayer {
 // Initialize the Web Audio Player
 let webAudioPlayer;
 
-// Initialize Web Audio Player (replaces YouTube player)
 const initWebAudioPlayer = () => {
-    console.log('Initializing Web Audio Player...');
+    console.log('Creating Web Audio Player instance...');
     webAudioPlayer = new WebAudioPlayer();
 };
 
