@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,6 @@
                 <a href="#about" class="nav-link">About</a>
                 <a href="#projects" class="nav-link">Projects</a>
                 <a href="#contact" class="nav-link">Contact</a>
-                <button type="button" class="theme-toggle" id="theme-toggle">🌙</button>
             </div>
             <div class="hamburger" id="hamburger">
                 <span></span>
@@ -351,6 +350,7 @@
         console.log('✅ Dependencies loaded with external config!');
         console.log('🔑 API Key status:', CONFIG.token !== 'DEMO_MODE' ? 'Loaded' : 'Demo Mode');
     </script>
+    <script>try{localStorage.setItem("theme","dark");document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
     <script src="script.js"></script>
     <script src="test.js"></script>  
 
