@@ -250,6 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }, 3000); // Give more time for file detection
+    // After: initWebAudioPlayer();
+
     
     // Add pulse animation
     const style = document.createElement('style');
